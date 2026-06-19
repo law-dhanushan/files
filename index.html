@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Management System</title>
+  
+  <!-- Premium Google Fonts and Tailwind CDN -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes slideIn {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-in {
+      animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased pb-20 md:pb-0">
+
+  <div class="min-h-screen flex flex-col md:flex-row">
+    
+    <!-- Dynamic Toast Alert Hub -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 pointer-events-none space-y-2"></div>
+
+    <!-- Mobile Top Navigation Header -->
+    <header class="md:hidden bg-slate-900 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-40 shadow-md border-b border-slate-800">
+      <div class="flex flex-col">
+        <span class="font-extrabold text-sm uppercase tracking-wider text-indigo-50">File Management System</span>
+        <span class="text-[10px] text-indigo-400 font-bold tracking-tight">Created by Dhanushan SC</span>
+      </div>
+      <button onclick="toggleMobileMenu()" class="p-1.5 text-slate-300 focus:outline-none bg-slate-800 rounded-lg">
+        <svg id="menu-icon-open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        <svg id="menu-icon-close" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </header>
+
+    <!-- Sidebar Menu (Desktop View) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 md:sticky md:flex w-72 bg-slate-950 text-slate-200 shrink-0 border-r border-slate-900 flex-col justify-between transition-transform duration-300 ease-in-out z-50">
+      <div>
+        <div class="p-6 border-b border-slate-900 hidden md:flex flex-col space-y-1">
+          <div class="flex items-center space-x-3">
+            <div class="p-2.5 bg-indigo-600 rounded-xl text-white shadow-md">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            </div>
+            <h1 class="font-black text-xs text-white tracking-wide uppercase leading-tight">File Management System</h1>
+          </div>
+          <p class="text-[11px] text-indigo-400 font-bold tracking-wide pl-11">Created by Dhanushan SC</p>
+        </div>
+
+        <nav class="p-4 space-y-1.5">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3.5 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-indigo-600 text-white shadow-lg focus:outline-none">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            <span>Dashboard Hub</span>
+          </button>
+          <button onclick="switchTab('directory')" id="nav-directory" class="w-full flex items-center space-x-3.5 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-900 hover:text-white focus:outline-none">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+            <span>Track Files</span>
+          </button>
+          <button onclick="switchTab('reporting')" id="nav-reporting" class="w-full flex items-center space-x-3.5 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-900 hover:text-white focus:outline-none">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            <span>Reports & Importer</span>
+          </button>
+        </nav>
+      </div>
+      <div class="p-5 bg-slate-950 border-t border-slate-900 text-[10px] text-slate-500 font-semibold font-mono text-center">
+        Dhanushan Workspace Engine v2.0
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+      
+      <!-- Top Title Bar -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm animate-slide-in">
+        <div>
+          <h2 id="workspace-title" class="text-xl md:text-2xl font-black text-slate-950 tracking-tight">Overview Workspace</h2>
+          <p class="text-xs text-slate-400 mt-0.5 font-medium">Monitor active file registries, allocated date spans, and custody pathways.</p>
+        </div>
+        <button onclick="openRegisterModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md transition-all text-center">
+          + Register New File
+        </button>
+      </div>
+
+      <!-- ============================== -->
+      <!-- TAB 1: OVERVIEW DASHBOARD -->
+      <!-- ============================== -->
+      <div id="tab-dashboard" class="space-y-6 animate-slide-in">
+        
+        <!-- Summary Cards Widgets -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div onclick="switchTabWithFilter('directory', 'all')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md cursor-pointer transition-all">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Registered Files</span>
+            <span id="stat-total" class="text-3xl font-black text-slate-900 block mt-1">0</span>
+            <span class="text-[11px] text-indigo-600 font-bold block mt-2">View entire registry →</span>
+          </div>
+          <div onclick="switchTabWithFilter('directory', 'mine')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500 hover:border-emerald-400 hover:shadow-md cursor-pointer transition-all">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">In My Custody</span>
+            <span id="stat-mine" class="text-3xl font-black text-slate-900 block mt-1">0</span>
+            <span class="text-[11px] text-emerald-600 font-bold block mt-2">Filter my files →</span>
+          </div>
+          <div onclick="switchTabWithFilter('directory', 'department')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500 hover:border-amber-400 hover:shadow-md cursor-pointer transition-all">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">With Department</span>
+            <span id="stat-dept" class="text-3xl font-black text-slate-900 block mt-1">0</span>
+            <span class="text-[11px] text-amber-600 font-bold block mt-2">Filter department files →</span>
+          </div>
+        </div>
+
+        <!-- Global Search Utility on Dashboard -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="relative">
+            <span class="absolute left-3 top-3 text-slate-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </span>
+            <input 
+              type="text" 
+              id="dashboard-search-input" 
+              oninput="triggerDashboardSearch(this.value)" 
+              placeholder="Search file numbers or reference codes instantly..." 
+              class="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Quick Timeline activities -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-500 flex items-center space-x-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Registered File Timelines (Tap to view details)</span>
+          </h3>
+          <div id="dashboard-recent-activities" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: DIRECTORY -->
+      <div id="tab-directory" class="space-y-4 hidden animate-slide-in">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-3 shadow-sm">
+          <div class="relative flex-1">
+            <span class="absolute left-3 top-3.5 text-slate-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </span>
+            <input type="text" id="directory-search-input" oninput="triggerDirectoryFilter()" placeholder="Search files..." class="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white" />
+          </div>
+          <div>
+            <select id="directory-custody-filter" onchange="triggerDirectoryFilter()" class="w-full md:w-auto bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs font-bold text-slate-700 cursor-pointer focus:outline-none">
+              <option value="all">All Custody Statuses</option>
+              <option value="mine">In My Custody</option>
+              <option value="department">With Department</option>
+            </select>
+          </div>
+        </div>
+        <div id="directory-cards-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- TAB 3: CUSTOM FILTERS & SPREADSHEETS -->
+      <div id="tab-reporting" class="space-y-6 hidden animate-slide-in">
+        
+        <!-- Filter parameters -->
+        <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2 text-slate-900 border-b border-slate-100 pb-3">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-500">Query Filter Parameters</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-bold">
+            <div>
+              <label class="block text-slate-400 uppercase tracking-wider mb-1.5">File Custody Status</label>
+              <select id="report-custody-filter" onchange="triggerReportsCalculation()" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-700 cursor-pointer focus:outline-none"><option value="all">All File Locations</option><option value="mine">Only In My Custody</option><option value="department">Only In Department Custody</option></select>
+            </div>
+            <div>
+              <label class="block text-slate-400 uppercase tracking-wider mb-1.5">Workflow Stage</label>
+              <select id="report-stage-filter" onchange="triggerReportsCalculation()" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-700 cursor-pointer focus:outline-none"><option value="all">All Dynamic Stages</option></select>
+            </div>
+            <div>
+              <label class="block text-slate-400 uppercase tracking-wider mb-1.5">Department Reference</label>
+              <input type="text" id="report-dept-search" oninput="triggerReportsCalculation()" placeholder="Filter ref code..." class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-slate-400 uppercase tracking-wider mb-1.5">Movement Date Match</label>
+              <select id="report-date-type" onchange="triggerReportsCalculation()" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-700 cursor-pointer focus:outline-none"><option value="any">Match Any Movements</option><option value="received">Match Received Only</option><option value="sent">Match Sent Only</option></select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs font-bold">
+            <div>
+              <label class="block text-slate-400 uppercase tracking-wider mb-1.5">Start Date Limit</label>
+              <input type="date" id="report-start-date" onchange="triggerReportsCalculation()" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-400 uppercase tracking-wider mb-1.5">End Date Limit</label>
+              <input type="date" id="report-end-date" onchange="triggerReportsCalculation()" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-none" />
+            </div>
+            <div class="flex items-end">
+              <button onclick="clearReportFilters()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl uppercase tracking-wider text-[10px] font-black border border-slate-200/50 transition-all">Clear Filter Rules</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXCEL/CSV DATA IMPORT & DOWNLOAD TEMPLATE MODULE -->
+        <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="border-b border-slate-100 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-900 flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span>Import Database details (CSV / Excel Sheet)</span>
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">Upload records in bulk from any Google sheet or Excel spreadsheet using our standard templates.</p>
+            </div>
+            <button onclick="downloadCSVTemplate()" class="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs uppercase px-4 py-2.5 rounded-xl border border-indigo-200 flex items-center justify-center space-x-2 transition">
+              <span>Download CSV Template</span>
+            </button>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 text-center space-y-3">
+            <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            <p class="text-xs text-slate-500 font-semibold">Select or drop your formatted template CSV data file below:</p>
+            <input type="file" id="spreadsheet-file-picker" accept=".csv" onchange="parseImportedCSV(event)" class="hidden" />
+            <button onclick="document.getElementById('spreadsheet-file-picker').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase px-5 py-2.5 rounded-xl transition shadow-sm">
+              Choose CSV File
+            </button>
+          </div>
+        </div>
+
+        <!-- Offline backups management -->
+        <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="border-b border-slate-100 pb-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+              <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-900 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <span>Full System Backups (JSON Format)</span>
+              </h3>
+              <p class="text-xs text-slate-400">Export or reload your entire history registry safely anytime.</p>
+            </div>
+            <button onclick="downloadFullBackup()" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase py-3.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-sm">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              <span>Download Backup Data</span>
+            </button>
+          </div>
+          <div class="flex items-center space-x-2 pt-2">
+            <input type="file" id="backup-file-picker" accept=".json" onchange="restoreBackup(event)" class="hidden" />
+            <button onclick="triggerFilePicker()" class="bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 font-bold text-xs uppercase py-2.5 px-4 rounded-xl flex items-center space-x-2 transition">
+              <span>Upload Backup JSON File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom spreadsheet columns selection -->
+        <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 class="font-extrabold text-sm uppercase text-slate-900 tracking-wider">Spreadsheet Data Downloader</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Toggle metadata columns flags to configure customizable reports down directly into spreadsheet files.</p>
+            </div>
+            <button onclick="executeCSVDownload()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase px-4 py-2.5 rounded-xl flex items-center justify-center space-x-1.5 shadow-sm">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              <span>Download Filtered Sheet (CSV)</span>
+            </button>
+          </div>
+          <div id="columns-selector-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl text-xs font-bold"></div>
+        </div>
+
+        <!-- Dynamic charts representation -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Dynamic Metrics Graphic</h4>
+            <select id="chartDimensionSelect" onchange="setChartDimensionValue(this.value)" class="bg-slate-50 text-xs font-bold p-1.5 rounded-lg cursor-pointer focus:outline-none"><option value="presentStage">By Situation Stage</option><option value="custody">By Custody Status</option></select>
+          </div>
+          <div id="chart-bars-container" class="space-y-4"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Mobile Navigation Tab Buttons -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-950 text-slate-400 border-t border-slate-900 flex justify-around items-center py-2.5 z-40">
+      <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center justify-center p-1 font-bold text-[9px] uppercase tracking-wider text-indigo-400">
+        <svg class="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+        <span>Home</span>
+      </button>
+      <button onclick="switchTab('directory')" id="nav-btn-directory" class="flex flex-col items-center justify-center p-1 font-bold text-[9px] uppercase tracking-wider text-slate-400">
+        <svg class="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        <span>Registry</span>
+      </button>
+      <button onclick="switchTab('reporting')" id="nav-btn-reporting" class="flex flex-col items-center justify-center p-1 font-bold text-[9px] uppercase tracking-wider text-slate-400">
+        <svg class="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+        <span>Reports</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- INTERACTIVE VIEW FILE DETAIL & TIMELINE OVERRIDE ACTION MODAL -->
+  <div id="modal-file-detail" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col animate-slide-in">
+      
+      <!-- Detail Header -->
+      <div class="bg-slate-900 p-5 text-white flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h3 id="detail-modal-fileNumber" class="text-xl font-black font-mono tracking-tight">FILE-2026-000</h3>
+            <span id="detail-modal-deptRef" class="bg-slate-800 text-indigo-400 text-xs font-bold px-2 py-0.5 rounded-lg border border-slate-700">Ref: ADM-000</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Detailed Custody Timeline & Register Parameters</p>
+        </div>
+        <button onclick="closeFileDetailModal()" class="p-1 text-slate-400 hover:text-white transition-all"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+      </div>
+
+      <!-- Detail Body Panel -->
+      <div class="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Subject Matter</span>
+            <p id="detail-modal-subject" class="text-sm font-bold text-slate-900 leading-snug"></p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Allocated Date</span>
+            <p id="detail-modal-allocatedDate" class="text-sm font-bold text-slate-900"></p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Present Situation Stage</span>
+            <p id="detail-modal-presentStage" class="text-sm font-bold text-slate-900"></p>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Current Location Custody</span>
+            <span id="detail-modal-custody" class="inline-block px-2.5 py-0.5 mt-1 rounded-full text-[10px] font-black uppercase tracking-wider">With Me</span>
+          </div>
+          <div class="col-span-1 md:col-span-2 space-y-1">
+            <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">General Description Remarks</span>
+            <p id="detail-modal-comments" class="text-xs font-semibold text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+          </div>
+        </div>
+
+        <!-- Action log timeline history list -->
+        <div class="border-t border-slate-200 pt-5 space-y-3">
+          <h4 class="font-extrabold text-xs uppercase tracking-wider text-slate-400 flex items-center space-x-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Movement Timeline Action History Logs</span>
+          </h4>
+          <div id="detail-modal-timeline-container" class="relative border-l-2 border-slate-100 pl-4 ml-1.5 space-y-4"></div>
+        </div>
+      </div>
+
+      <!-- Action Panel Bottom Bar -->
+      <div class="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-100">
+        <button id="detail-modal-edit-trigger" onclick="" class="bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition">
+          Edit Details
+        </button>
+        <button onclick="closeFileDetailModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition">
+          Close Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTER / MODIFY FILE CODES WITH DYNAMIC INITIAL EVENT LOG -->
+  <div id="modal-register" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-xl rounded-2xl shadow-xl overflow-hidden flex flex-col animate-slide-in">
+      <div class="bg-slate-900 p-4 text-white flex items-center justify-between">
+        <span id="modal-register-title" class="font-extrabold text-xs uppercase tracking-wider">Register File Index</span>
+        <button onclick="closeRegisterModal()"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+      </div>
+      <form onsubmit="handleRegisterSubmit(event)" class="p-5 space-y-4 overflow-y-auto max-h-[80vh]">
+        <input type="hidden" id="edit-file-id" value="" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">File Number * (Unique)</label>
+            <input type="text" id="reg-fileNumber" required placeholder="FILE-2026-009" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Department Reference * (Unique)</label>
+            <input type="text" id="reg-deptRef" required placeholder="ADM-921" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Subject Matter *</label>
+          <input type="text" id="reg-subject" required placeholder="Subject descriptions..." class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        
+        <!-- ALLOCATED DATE FIELD POSITIONED IMMEDIATELY AFTER SUBJECT MATTER -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center space-x-1">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <span>Allocated Date *</span>
+          </label>
+          <input type="date" id="reg-allocatedDate" required class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Present Stage</label>
+            <input type="text" id="reg-presentStage" placeholder="e.g. In Review" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Initial Custody Status</label>
+            <select id="reg-custody" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"><option value="mine">In My Custody (Mine)</option><option value="department">With Department</option></select>
+          </div>
+        </div>
+
+        <!-- DIRECT INITIAL ACTION LOG ENTRY FOR SPEED LOGGING -->
+        <div id="initial-log-toggle-container" class="border-t border-slate-200 pt-4 mt-2 space-y-3">
+          <label class="flex items-center space-x-2 cursor-pointer select-none">
+            <input type="checkbox" id="reg-addInitialHistory" onchange="toggleInitialLogFields(this.checked)" class="rounded text-indigo-600 w-4 h-4" />
+            <span class="text-xs font-black text-slate-800">Directly Input Initial History Action Log (Received Date)</span>
+          </label>
+          <div id="initial-log-fields" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-3 hidden">
+            <div>
+              <select id="reg-initialHistType" class="w-full bg-white border p-2 text-xs font-bold focus:outline-none rounded-lg"><option value="received">Received</option><option value="sent">Sent</option></select>
+            </div>
+            <div><input type="date" id="reg-initialHistDate" class="w-full bg-white border p-2 text-xs rounded-lg focus:outline-none" /></div>
+            <div class="col-span-2"><input type="text" id="reg-initialHistComment" placeholder="Reason or movement comments..." class="w-full bg-white border p-2.5 text-xs rounded-lg focus:outline-none" /></div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">General Notes</label>
+          <textarea id="reg-comments" rows="2" placeholder="Describe comments..." class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeRegisterModal()" class="px-4 py-2.5 bg-slate-100 text-xs uppercase font-bold rounded-xl">Close</button>
+          <button type="submit" class="px-4 py-2.5 bg-indigo-600 text-white text-xs uppercase font-bold rounded-xl">Save Index</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: LOG MOVEMENT TIMELINE ACTION -->
+  <div id="modal-log-event" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col animate-slide-in">
+      <div class="bg-slate-900 p-4 text-white flex items-center justify-between">
+        <div><h3 class="font-bold text-xs uppercase tracking-wider">Log File Movement Activity</h3><p id="log-file-code-title" class="text-[10px] text-slate-400 font-mono mt-0.5"></p></div>
+        <button onclick="closeLogEventModal()"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+      </div>
+      <form onsubmit="handleLogEventSubmit(event)" class="p-5 space-y-4">
+        <input type="hidden" id="log-file-id" value="" />
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="log-btn-received" onclick="setLogType('received')" class="py-2.5 text-xs font-bold rounded-xl border uppercase">Received File</button>
+          <button type="button" id="log-btn-sent" onclick="setLogType('sent')" class="py-2.5 text-xs font-bold rounded-xl border uppercase">Sent File</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border">
+          <div><input type="date" id="log-date" required class="w-full bg-white border p-2.5 rounded-xl text-xs font-bold" /></div>
+          <div>
+            <select id="log-custody" class="w-full bg-white border p-2.5 rounded-xl text-xs font-black"><option value="mine">In My Custody</option><option value="department">With Department</option></select>
+          </div>
+        </div>
+        <textarea id="log-comment" rows="3" required placeholder="Comments..." class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs focus:bg-white focus:outline-none"></textarea>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeLogEventModal()" class="px-4 py-2.5 bg-slate-100 text-xs font-bold rounded-xl">Cancel</button>
+          <button type="submit" class="px-4 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl">Save Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE DIALOG -->
+  <div id="modal-delete-confirm" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 text-center space-y-4 animate-slide-in">
+      <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></div>
+      <h4 class="font-extrabold text-slate-900">Delete File Registry?</h4>
+      <div class="flex gap-2"><button onclick="closeDeleteConfirmModal()" class="flex-1 py-2.5 bg-slate-100 text-xs font-bold rounded-xl">Cancel</button><button onclick="executeDeleteFile()" class="flex-1 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl">Delete</button></div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- HIGHLY OPTIMIZED VANILLA JS SYSTEM CONTROLLER -->
+  <!-- ============================================================== -->
+  <script>
+    // System State Management
+    let files = [];
+    let activeTab = 'dashboard';
+    let currentLogType = 'received';
+    let fileIdToDelete = null;
+    let chartDimension = 'presentStage';
+    let mobileMenuOpen = false;
+    
+    // Directory search parameters
+    let dirSearch = '';
+    let dirCustody = 'all';
+
+    // Analytics reports variables
+    let repCustody = 'all';
+    let repStage = 'all';
+    let repDeptSearch = '';
+    let repStartDate = '';
+    let repEndDate = '';
+    let repDateType = 'any';
+
+    // Selective Columns to include inside Custom CSV Exports
+    const selectedColumns = {
+      fileNumber: true,
+      deptRef: true,
+      subject: true,
+      allocatedDate: true,
+      presentStage: true,
+      custody: true,
+      latestActionDate: true,
+      latestComment: true,
+      totalMovements: true,
+      comments: true
+    };
+
+    // Safe UUID Generator Fallback
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'f-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now().toString(36);
+    };
+
+    const INITIAL_DEMO_FILES = [
+      {
+        id: "demo-file-1",
+        fileNumber: "FILE-2026-009",
+        deptRef: "ADM-921",
+        subject: "Office Equipment & Furniture Procurement",
+        allocatedDate: "2026-06-01",
+        presentStage: "Awaiting Finance Approval",
+        custody: "mine",
+        comments: "Awaiting final sign-off from assistant director.",
+        createdAt: "2026-06-01T09:00:00.000Z",
+        updatedAt: "2026-06-18T14:30:00.000Z",
+        history: [
+          { id: "hist-1-1", type: "received", date: "2026-06-01", comment: "Received physical folders from Admin Registry." },
+          { id: "hist-1-2", type: "sent", date: "2026-06-10", comment: "Dispatched to procurement team to check line item prices." },
+          { id: "hist-1-3", type: "received", date: "2026-06-18", comment: "Returned from procurement. Ready for director sign-off." }
+        ]
+      },
+      {
+        id: "demo-file-2",
+        fileNumber: "FILE-2026-042",
+        deptRef: "HR-104",
+        subject: "Annual Staff Training & Development Program",
+        allocatedDate: "2026-06-03",
+        presentStage: "Budget Verification",
+        custody: "department",
+        comments: "Transmitted physical documents for stamp duty calculations.",
+        createdAt: "2026-06-03T11:00:00.000Z",
+        updatedAt: "2026-06-12T16:00:00.000Z",
+        history: [
+          { id: "hist-2-1", type: "received", date: "2026-06-03", comment: "Received draft plan with employee schedules." },
+          { id: "hist-2-2", type: "sent", date: "2026-06-12", comment: "Sent to Accounts Division for verifying hourly allowances." }
+        ]
+      }
+    ];
+
+    window.onload = function() {
+      const savedFiles = localStorage.getItem('docusync_files');
+      if (savedFiles) {
+        try {
+          files = JSON.parse(savedFiles);
+        } catch(e) {
+          files = INITIAL_DEMO_FILES;
+        }
+      } else {
+        files = INITIAL_DEMO_FILES;
+      }
+
+      // Pre-fill fields
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('reg-allocatedDate').value = today;
+      document.getElementById('reg-initialHistDate').value = today;
+      document.getElementById('log-date').value = today;
+
+      // Render initial Views
+      switchTab('dashboard');
+    };
+
+    // Notification toast generator
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `p-4 rounded-xl shadow-xl flex items-center space-x-3 text-white transition-all duration-300 transform translate-y-2 opacity-0 animate-slide-in pointer-events-auto ${type === 'error' ? 'bg-rose-600' : 'bg-slate-900'}`;
+      
+      const icon = type === 'error' ? 
+        `<svg class="w-5 h-5 text-rose-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>` : 
+        `<svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+
+      toast.innerHTML = `${icon}<span class="font-bold text-xs uppercase tracking-wider">${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Toggle navigation panels (Tabs switcher)
+    function switchTab(tabId) {
+      activeTab = tabId;
+      
+      document.getElementById('tab-dashboard').classList.add('hidden');
+      document.getElementById('tab-directory').classList.add('hidden');
+      document.getElementById('tab-reporting').classList.add('hidden');
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      const tabs = ['dashboard', 'directory', 'reporting'];
+      tabs.forEach(t => {
+        const desktopBtn = document.getElementById(`nav-${t}`);
+        const mobileBtn = document.getElementById(`nav-btn-${t}`);
+        
+        if (t === tabId) {
+          if (desktopBtn) desktopBtn.className = "w-full flex items-center space-x-3.5 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-indigo-600 text-white shadow-lg focus:outline-none";
+          if (mobileBtn) mobileBtn.className = "flex flex-col items-center justify-center p-1 font-bold text-[9px] uppercase tracking-wider text-indigo-400 focus:outline-none";
+        } else {
+          if (desktopBtn) desktopBtn.className = "w-full flex items-center space-x-3.5 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-900 hover:text-white focus:outline-none";
+          if (mobileBtn) mobileBtn.className = "flex flex-col items-center justify-center p-1 font-bold text-[9px] uppercase tracking-wider text-slate-400 focus:outline-none";
+        }
+      });
+
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'directory') renderDirectory();
+      if (tabId === 'reporting') renderReportingGrid();
+      
+      const titles = {
+        dashboard: "Dashboard Overview",
+        directory: "Physical File Registry",
+        reporting: "Reports & Importer Panel"
+      };
+      document.getElementById('workspace-title').innerText = titles[tabId] || "Workspace";
+    }
+
+    function switchTabWithFilter(tabId, custodyVal) {
+      dirCustody = custodyVal;
+      document.getElementById('directory-custody-filter').value = custodyVal;
+      switchTab(tabId);
+    }
+
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const openIcon = document.getElementById('menu-icon-open');
+      const closeIcon = document.getElementById('menu-icon-close');
+      
+      mobileMenuOpen = !mobileMenuOpen;
+      if (mobileMenuOpen) {
+        sidebar.classList.remove('-translate-x-full');
+        openIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        openIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+      }
+    }
+
+    function renderDashboard() {
+      const total = files.length;
+      const mine = files.filter(f => f.custody === 'mine').length;
+      const dept = files.filter(f => f.custody === 'department').length;
+
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-mine').innerText = mine;
+      document.getElementById('stat-dept').innerText = dept;
+
+      const listContainer = document.getElementById('dashboard-recent-activities');
+      listContainer.innerHTML = '';
+
+      if (files.length === 0) {
+        listContainer.innerHTML = `
+          <p class="text-xs text-slate-400 italic text-center py-6">No file timelines available inside your database directory.</p>
+        `;
+        return;
+      }
+
+      const searchInputVal = document.getElementById('dashboard-search-input').value.toLowerCase().trim();
+      const filteredList = files.filter(f => {
+        return f.fileNumber.toLowerCase().includes(searchInputVal) || 
+               f.subject.toLowerCase().includes(searchInputVal) || 
+               (f.deptRef && f.deptRef.toLowerCase().includes(searchInputVal));
+      });
+
+      if (filteredList.length === 0) {
+        listContainer.innerHTML = `
+          <p class="text-xs text-slate-400 italic text-center py-6">No files matching search criteria.</p>
+        `;
+        return;
+      }
+
+      const recentList = [...filteredList].reverse();
+      recentList.forEach(file => {
+        const item = document.createElement('div');
+        item.className = "p-4 bg-slate-50 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-100 hover:shadow-sm cursor-pointer transition-all border border-slate-150 animate-slide-in";
+        item.setAttribute('onclick', `openFileDetailModal('${file.id}')`);
+        
+        item.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2.5 flex-wrap">
+              <span class="font-mono text-base font-extrabold text-slate-900 tracking-tight">${escapeHtml(file.fileNumber)}</span>
+              ${file.deptRef ? `
+                <span class="text-[10px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider border border-indigo-100">
+                  Ref: ${escapeHtml(file.deptRef)}
+                </span>
+              ` : ''}
+              
+              ${file.allocatedDate ? `
+                <span class="text-[10px] text-slate-400 flex items-center space-x-1 font-semibold">
+                  <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <span>Allocated: ${escapeHtml(file.allocatedDate)}</span>
+                </span>
+              ` : ''}
+            </div>
+            <span class="font-semibold text-slate-800 text-xs block leading-relaxed">${escapeHtml(file.subject)}</span>
+          </div>
+          <span class="self-start sm:self-auto px-2.5 py-1 font-black rounded-full text-[9px] uppercase tracking-wider ${file.custody === 'mine' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+            ${file.custody === 'mine' ? 'With Me' : 'With Dept'}
+          </span>
+        `;
+        listContainer.appendChild(item);
+      });
+    }
+
+    function triggerDashboardSearch(val) {
+      renderDashboard();
+    }
+
+    function renderDirectory() {
+      const container = document.getElementById('directory-cards-grid');
+      container.innerHTML = '';
+
+      const targetList = files.filter(f => {
+        const matchText = f.fileNumber.toLowerCase().includes(dirSearch.toLowerCase()) || 
+                          f.subject.toLowerCase().includes(dirSearch.toLowerCase()) || 
+                          (f.deptRef && f.deptRef.toLowerCase().includes(dirSearch.toLowerCase()));
+        const matchCustody = dirCustody === 'all' || f.custody === dirCustody;
+        return matchText && matchCustody;
+      });
+
+      if (targetList.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white p-12 text-center rounded-2xl border border-dashed border-slate-200 text-slate-400">
+            <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+            <p class="text-xs font-bold uppercase tracking-wider">No file indexes found matching parameters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      targetList.reverse().forEach(file => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between cursor-pointer animate-slide-in";
+        card.setAttribute('onclick', `openFileDetailModal('${file.id}')`);
+
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-start gap-2">
+              <div class="space-y-1">
+                <span class="font-mono text-base font-black bg-slate-50 text-slate-900 px-2.5 py-1 rounded-lg border border-slate-200">${escapeHtml(file.fileNumber)}</span>
+                ${file.deptRef ? `<span class="text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-100 font-bold uppercase ml-2 tracking-wider px-2 py-0.5 rounded-lg">Ref: ${escapeHtml(file.deptRef)}</span>` : ''}
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap ${file.custody === 'mine' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                ${file.custody === 'mine' ? 'In My Custody' : 'In Dept Custody'}
+              </span>
+            </div>
+
+            <h4 class="font-black text-sm text-slate-900 leading-snug">${escapeHtml(file.subject)}</h4>
+            
+            <div class="flex flex-wrap items-center gap-4 text-xs">
+              ${file.allocatedDate ? `
+                <div class="flex items-center space-x-1.5 font-bold text-slate-600 bg-indigo-50/50 text-[10px] px-2 py-1 rounded-lg">
+                  <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <span>Allocated Date: ${escapeHtml(file.allocatedDate)}</span>
+                </div>
+              ` : ''}
+              <div class="flex items-center space-x-1.5">
+                <span class="text-slate-400 font-bold uppercase text-[9px]">Present Stage:</span>
+                <span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg text-[10px]">${escapeHtml(file.presentStage)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3" onclick="event.stopPropagation();">
+            <button
+              onclick="openLogEventModal('${file.id}')"
+              class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3.5 py-2.5 rounded-xl flex items-center space-x-1.5 transition-all"
+            >
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+              <span>Log Event</span>
+            </button>
+
+            <div class="flex items-center space-x-1">
+              <button onclick="editFileRegister('${file.id}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              </button>
+              <button onclick="openDeleteConfirmModal('${file.id}')" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function triggerDirectoryFilter() {
+      dirSearch = document.getElementById('directory-search-input').value;
+      dirCustody = document.getElementById('directory-custody-filter').value;
+      renderDirectory();
+    }
+
+    function renderReportingGrid() {
+      const selectStage = document.getElementById('report-stage-filter');
+      const savedValue = selectStage.value;
+      selectStage.innerHTML = '<option value="all">All Dynamic Stages</option>';
+      dynamicStages.forEach(stg => {
+        const option = document.createElement('option');
+        option.value = stg;
+        option.innerText = stg;
+        selectStage.appendChild(option);
+      });
+      selectStage.value = savedValue;
+
+      renderChartMetrics();
+    }
+
+    function renderChartMetrics() {
+      const container = document.getElementById('chart-bars-container');
+      container.innerHTML = '';
+
+      const counts = {};
+      const targetList = reportFilteredFiles();
+
+      targetList.forEach(f => {
+        let key = f.presentStage || 'Initial';
+        if (chartDimension === 'custody') {
+          key = f.custody === 'mine' ? 'My Custody' : 'Dept Custody';
+        }
+        counts[key] = (counts[key] || 0) + 1;
+      });
+
+      const dataArray = Object.entries(counts).map(([name, value]) => ({ name, value }));
+      const maxVal = dataArray.length > 0 ? Math.max(...dataArray.map(d => d.value), 1) : 1;
+
+      if (dataArray.length === 0) {
+        container.innerHTML = `
+          <p class="text-center text-slate-400 py-6 italic text-xs">No entries match your active filters to display visual chart metrics.</p>
+        `;
+        return;
+      }
+
+      dataArray.forEach(item => {
+        const percentage = Math.round((item.value / targetList.length) * 100);
+        const calculatedWidth = (item.value / maxVal) * 100;
+        
+        const row = document.createElement('div');
+        row.className = "text-xs animate-slide-in";
+        row.innerHTML = `
+          <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+            <span>${escapeHtml(item.name)}</span>
+            <span>${item.value} ${item.value === 1 ? 'file' : 'files'} (${percentage}%)</span>
+          </div>
+          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+            <div class="bg-indigo-600 h-3 rounded-full transition-all duration-300" style="width: ${calculatedWidth}%"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function setChartDimensionValue(val) {
+      chartDimension = val;
+      renderChartMetrics();
+    }
+
+    function renderColumnsSelector() {
+      const container = document.getElementById('columns-selector-grid');
+      container.innerHTML = '';
+
+      Object.keys(selectedColumns).forEach(key => {
+        const label = document.createElement('label');
+        label.className = "flex items-center space-x-2.5 text-slate-700 cursor-pointer select-none";
+        label.innerHTML = `
+          <input 
+            type="checkbox" 
+            ${selectedColumns[key] ? 'checked' : ''} 
+            onchange="toggleColumnExportRule('${key}', this.checked)"
+            class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 border-slate-300" 
+          />
+          <span class="capitalize">${escapeHtml(key.replace(/([A-Z])/g, ' $1'))}</span>
+        `;
+        container.appendChild(label);
+      });
+    }
+
+    function toggleColumnExportRule(key, checked) {
+      selectedColumns[key] = checked;
+    }
+
+    function triggerReportsCalculation() {
+      repCustody = document.getElementById('report-custody-filter').value;
+      repStage = document.getElementById('report-stage-filter').value;
+      repDeptSearch = document.getElementById('report-dept-search').value;
+      repStartDate = document.getElementById('report-start-date').value;
+      repEndDate = document.getElementById('report-end-date').value;
+      repDateType = document.getElementById('report-date-type').value;
+
+      renderChartMetrics();
+    }
+
+    function clearReportFilters() {
+      document.getElementById('report-custody-filter').value = 'all';
+      document.getElementById('report-stage-filter').value = 'all';
+      document.getElementById('report-dept-search').value = '';
+      document.getElementById('report-start-date').value = '';
+      document.getElementById('report-end-date').value = '';
+      document.getElementById('report-date-type').value = 'any';
+
+      triggerReportsCalculation();
+      showToast("Filter parameters reset successfully.");
+    }
+
+    function reportFilteredFiles() {
+      return files.filter(file => {
+        if (repCustody !== 'all' && file.custody !== repCustody) return false;
+        if (repStage !== 'all' && file.presentStage !== repStage) return false;
+        if (repDeptSearch && (!file.deptRef || !file.deptRef.toLowerCase().includes(repDeptSearch.toLowerCase()))) return false;
+        
+        if (repStartDate || repEndDate) {
+          const start = repStartDate ? new Date(repStartDate) : null;
+          const end = repEndDate ? new Date(repEndDate) : null;
+          if (end) end.setHours(23, 59, 59, 999);
+
+          const hasMatchingLog = file.history?.some(h => {
+            if (repDateType === 'received' && h.type !== 'received') return false;
+            if (repDateType === 'sent' && h.type !== 'sent') return false;
+            const logTime = new Date(h.date);
+            return (start ? logTime >= start : true) && (end ? logTime <= end : true);
+          });
+          if (!hasMatchingLog) return false;
+        }
+        return true;
+      });
+    }
+
+    // Modern Blob Download Engine to satisfy secure mobile-safe browser requirements
+    function executeCSVDownload() {
+      const targetList = reportFilteredFiles();
+      if (targetList.length === 0) {
+        showToast("No files match active filter criteria.", "error");
+        return;
+      }
+
+      const headers = [];
+      if (selectedColumns.fileNumber) headers.push("File Number");
+      if (selectedColumns.deptRef) headers.push("Department Ref");
+      if (selectedColumns.subject) headers.push("Subject Matter");
+      if (selectedColumns.allocatedDate) headers.push("Allocated Date");
+      if (selectedColumns.presentStage) headers.push("Stage");
+      if (selectedColumns.custody) headers.push("Custody");
+      if (selectedColumns.latestActionDate) headers.push("Latest Action Date");
+      if (selectedColumns.latestComment) headers.push("Latest Action Comment");
+      if (selectedColumns.totalMovements) headers.push("Total Movements Logged");
+      if (selectedColumns.comments) headers.push("General Notes");
+
+      const rows = targetList.map(file => {
+        const line = [];
+        const sortedHistory = file.history ? [...file.history].sort((a,b) => new Date(b.date) - new Date(a.date)) : [];
+        const latest = sortedHistory[0] || {};
+
+        if (selectedColumns.fileNumber) line.push(file.fileNumber);
+        if (selectedColumns.deptRef) line.push(file.deptRef || 'N/A');
+        if (selectedColumns.subject) line.push(file.subject);
+        if (selectedColumns.allocatedDate) line.push(file.allocatedDate || 'N/A');
+        if (selectedColumns.presentStage) line.push(file.presentStage);
+        if (selectedColumns.custody) line.push(file.custody === 'mine' ? 'In My Custody' : 'In Dept Custody');
+        if (selectedColumns.latestActionDate) line.push(latest.date || 'N/A');
+        if (selectedColumns.latestComment) line.push(latest.comment || 'N/A');
+        if (selectedColumns.totalMovements) line.push(file.history ? file.history.length : 0);
+        if (selectedColumns.comments) line.push(file.comments || 'None');
+        
+        return line;
+      });
+
+      // Binary BOM compiler for Excel compatible downloads on mobile browsers
+      const csvContentString = "\uFEFF" + [headers.join(",")].concat(rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))).join("\n");
+      const blob = new Blob([csvContentString], { type: 'text/csv;charset=utf-8;' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const anchor = document.createElement("a");
+      anchor.setAttribute("href", blobUrl);
+      anchor.setAttribute("download", `Spreadsheet_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(blobUrl);
+
+      showToast("Filtered spreadsheet report downloaded!");
+    }
+
+    function openRegisterModal() {
+      document.getElementById('edit-file-id').value = '';
+      document.getElementById('modal-register-title').innerText = "Register File Index";
+      
+      document.getElementById('reg-fileNumber').value = '';
+      document.getElementById('reg-deptRef').value = '';
+      document.getElementById('reg-subject').value = '';
+      document.getElementById('reg-allocatedDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('reg-presentStage').value = 'Initial Phase';
+      document.getElementById('reg-custody').value = 'mine';
+      document.getElementById('reg-comments').value = '';
+
+      document.getElementById('reg-addInitialHistory').checked = false;
+      toggleInitialLogFields(false);
+      document.getElementById('reg-initialHistType').value = 'received';
+      document.getElementById('reg-initialHistDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('reg-initialHistComment').value = 'First entry logged on database creation.';
+
+      document.getElementById('initial-log-toggle-container').classList.remove('hidden');
+
+      const modal = document.getElementById('modal-register');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRegisterModal() {
+      const modal = document.getElementById('modal-register');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function editFileRegister(id) {
+      const file = files.find(f => f.id === id);
+      if (!file) return;
+
+      document.getElementById('edit-file-id').value = file.id;
+      document.getElementById('modal-register-title').innerText = "Modify File Registry";
+
+      document.getElementById('reg-fileNumber').value = file.fileNumber;
+      document.getElementById('reg-deptRef').value = file.deptRef || '';
+      document.getElementById('reg-subject').value = file.subject;
+      document.getElementById('reg-allocatedDate').value = file.allocatedDate || new Date().toISOString().split('T')[0];
+      document.getElementById('reg-presentStage').value = file.presentStage;
+      document.getElementById('reg-custody').value = file.custody;
+      document.getElementById('reg-comments').value = file.comments || '';
+
+      document.getElementById('initial-log-toggle-container').classList.add('hidden');
+
+      const modal = document.getElementById('modal-register');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function toggleInitialLogFields(checked) {
+      const container = document.getElementById('initial-log-fields');
+      if (checked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function handleRegisterSubmit(e) {
+      e.preventDefault();
+      
+      const editId = document.getElementById('edit-file-id').value;
+      const fileNum = document.getElementById('reg-fileNumber').value.trim();
+      const deptRef = document.getElementById('reg-deptRef').value.trim();
+      const subject = document.getElementById('reg-subject').value.trim();
+      
+      if (!fileNum || !deptRef || !subject) {
+        showToast("Please complete all required fields.", "error");
+        return;
+      }
+
+      // Unique Constraint Validations
+      const existingFileNum = files.find(f => f.fileNumber.toLowerCase() === fileNum.toLowerCase() && f.id !== editId);
+      if (existingFileNum) {
+        showToast(`File Number "${fileNum}" already exists! It must be unique.`, "error");
+        return;
+      }
+
+      const existingDeptRef = files.find(f => f.deptRef.toLowerCase() === deptRef.toLowerCase() && f.id !== editId);
+      if (existingDeptRef) {
+        showToast(`Department Reference "${deptRef}" already exists! It must be unique.`, "error");
+        return;
+      }
+
+      let updatedList = [...files];
+      
+      if (editId) {
+        updatedList = files.map(f => {
+          if (f.id === editId) {
+            return {
+              ...f,
+              fileNumber: fileNum,
+              deptRef: deptRef,
+              subject: subject,
+              allocatedDate: document.getElementById('reg-allocatedDate').value,
+              presentStage: document.getElementById('reg-presentStage').value.trim() || 'Initial Phase',
+              custody: document.getElementById('reg-custody').value,
+              comments: document.getElementById('reg-comments').value.trim(),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return f;
+        });
+        showToast("Tracking parameters modified successfully!");
+      } else {
+        const newId = `file-${generateUUID()}`;
+        const initialLogs = [];
+        
+        const wantInitialLog = document.getElementById('reg-addInitialHistory').checked;
+        if (wantInitialLog) {
+          initialLogs.push({
+            id: `hist-${generateUUID()}`,
+            type: document.getElementById('reg-initialHistType').value,
+            date: document.getElementById('reg-initialHistDate').value,
+            comment: document.getElementById('reg-initialHistComment').value.trim() || "Registered entry."
+          });
+        }
+
+        const freshFile = {
+          id: newId,
+          fileNumber: fileNum,
+          deptRef: deptRef,
+          subject: subject,
+          allocatedDate: document.getElementById('reg-allocatedDate').value,
+          presentStage: document.getElementById('reg-presentStage').value.trim() || 'Initial Phase',
+          custody: document.getElementById('reg-custody').value,
+          comments: document.getElementById('reg-comments').value.trim(),
+          history: initialLogs,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        updatedList.push(freshFile);
+        showToast("File register added successfully!");
+      }
+
+      files = updatedList;
+      localStorage.setItem('docusync_files', JSON.stringify(files));
+      
+      closeRegisterModal();
+      switchTab(activeTab);
+    }
+
+    function openFileDetailModal(id) {
+      const file = files.find(f => f.id === id);
+      if (!file) return;
+
+      document.getElementById('detail-modal-fileNumber').innerText = file.fileNumber;
+      document.getElementById('detail-modal-deptRef').innerText = `Ref: ${file.deptRef || 'N/A'}`;
+      document.getElementById('detail-modal-subject').innerText = file.subject;
+      document.getElementById('detail-modal-allocatedDate').innerText = file.allocatedDate || 'N/A';
+      document.getElementById('detail-modal-presentStage').innerText = file.presentStage || 'N/A';
+      document.getElementById('detail-modal-comments').innerText = file.comments || 'No extra description notes listed.';
+
+      const custodyBadge = document.getElementById('detail-modal-custody');
+      if (file.custody === 'mine') {
+        custodyBadge.innerText = 'With Me';
+        custodyBadge.className = 'inline-block px-2.5 py-0.5 mt-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800';
+      } else {
+        custodyBadge.innerText = 'With Department';
+        custodyBadge.className = 'inline-block px-2.5 py-0.5 mt-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800';
+      }
+
+      const timelineContainer = document.getElementById('detail-modal-timeline-container');
+      timelineContainer.innerHTML = '';
+
+      if (!file.history || file.history.length === 0) {
+        timelineContainer.innerHTML = `<p class="text-xs text-slate-400 italic">No movement actions logged yet.</p>`;
+      } else {
+        const sortedLogs = [...file.history].sort((a,b) => new Date(b.date) - new Date(a.date));
+        sortedLogs.forEach(log => {
+          const row = document.createElement('div');
+          row.className = "relative group text-xs animate-slide-in";
+          row.innerHTML = `
+            <span class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white ${
+              log.type === 'received' ? 'bg-emerald-500' : 'bg-amber-500'
+            }"></span>
+            <div class="flex items-center space-x-2 text-slate-400 font-semibold text-[10px]">
+              <span>${log.date}</span>
+              <span>•</span>
+              <span class="uppercase text-[9px] font-bold px-1.5 rounded ${
+                log.type === 'received' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }">${log.type}</span>
+            </div>
+            <p class="text-slate-800 font-bold mt-1 leading-relaxed">"${escapeHtml(log.comment)}"</p>
+          `;
+          timelineContainer.appendChild(row);
+        });
+      }
+
+      document.getElementById('detail-modal-edit-trigger').setAttribute('onclick', `closeFileDetailModal(); editFileRegister('${file.id}');`);
+
+      const modal = document.getElementById('modal-file-detail');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeFileDetailModal() {
+      const modal = document.getElementById('modal-file-detail');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openLogEventModal(fileId) {
+      const file = files.find(f => f.id === fileId);
+      if (!file) return;
+
+      document.getElementById('log-file-id').value = file.id;
+      document.getElementById('log-file-code-title').innerText = `File Code: ${file.fileNumber}`;
+      document.getElementById('log-comment').value = '';
+      
+      setLogType('received');
+
+      const modal = document.getElementById('modal-log-event');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLogEventModal() {
+      const modal = document.getElementById('modal-log-event');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setLogType(t) {
+      currentLogType = t;
+      document.getElementById('log-btn-received').className = t==='received' ? "py-2.5 text-xs font-bold rounded-xl border bg-emerald-50 text-emerald-700 border-emerald-500" : "py-2.5 text-xs font-bold rounded-xl border bg-slate-50";
+      document.getElementById('log-btn-sent').className = t==='sent' ? "py-2.5 text-xs font-bold rounded-xl border bg-amber-50 text-amber-700 border-amber-500" : "py-2.5 text-xs font-bold rounded-xl border bg-slate-50";
+      document.getElementById('log-custody').value = t==='received' ? 'mine' : 'department';
+    }
+
+    function handleLogEventSubmit(e) {
+      e.preventDefault();
+      const fid = document.getElementById('log-file-id').value;
+      const c = document.getElementById('log-comment').value.trim();
+      if (!c) return;
+
+      files = files.map(x => {
+        if (x.id === fid) {
+          const freshHistory = x.history ? [...x.history] : [];
+          freshHistory.push({
+            id: generateUUID(),
+            type: currentLogType,
+            date: document.getElementById('log-date').value,
+            comment: c
+          });
+          return {
+            ...x,
+            custody: document.getElementById('log-custody').value,
+            history: freshHistory,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return x;
+      });
+
+      localStorage.setItem('docusync_files', JSON.stringify(files));
+      showToast("Timeline log event saved successfully!");
+      closeLogEventModal();
+      switchTab(activeTab);
+    }
+
+    function openDeleteConfirmModal(id) {
+      fileIdToDelete = id;
+      document.getElementById('modal-delete-confirm').className = "fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4";
+    }
+
+    function closeDeleteConfirmModal() {
+      fileIdToDelete = null;
+      document.getElementById('modal-delete-confirm').className = "hidden";
+    }
+
+    function executeDeleteFile() {
+      files = files.filter(x => x.id !== fileIdToDelete);
+      localStorage.setItem('docusync_files', JSON.stringify(files));
+      closeDeleteConfirmModal();
+      showToast("File register removed.");
+      switchTab(activeTab);
+    }
+
+    function triggerFilePicker() {
+      document.getElementById('backup-file-picker').click();
+    }
+
+    // Binary Backup system
+    function downloadFullBackup() {
+      try {
+        const fileContent = JSON.stringify(files, null, 2);
+        const blob = new Blob([fileContent], { type: 'application/json;charset=utf-8;' });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const anchor = document.createElement('a');
+        anchor.setAttribute('href', blobUrl);
+        anchor.setAttribute('download', `Dhanushan_File_System_Backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(blobUrl);
+        
+        showToast("Full system backup JSON file downloaded!");
+      } catch (err) {
+        showToast("Device error compiling data backup.", "error");
+      }
+    }
+
+    function restoreBackup(e) {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = function(evt) {
+        try {
+          files = JSON.parse(evt.target.result);
+          localStorage.setItem('docusync_files', JSON.stringify(files));
+          showToast("Data restored successfully.");
+          switchTab(activeTab);
+        } catch(err) {
+          showToast("Invalid JSON file uploaded.", "error");
+        }
+      };
+      r.readAsText(f);
+    }
+
+    // FEATURE 7: EXCEL/CSV DATA SPREADSHEET IMPORTER
+    function downloadCSVTemplate() {
+      const headers = ["File Number", "Department Reference", "Subject Matter", "Allocated Date", "Present Stage", "Custody (Mine or Department)", "General Comments"];
+      const row = ["FILE-2026-105", "DEPT-ADM-922", "Sample Subject Matter Title", "2026-06-19", "Under Review", "Mine", "Initial comments go here."];
+      
+      const csvContentString = "\uFEFF" + [headers.join(",")].concat([row.join(",")]).join("\n");
+      const blob = new Blob([csvContentString], { type: 'text/csv;charset=utf-8;' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.setAttribute("href", blobUrl);
+      a.setAttribute("download", "Dhanushan_Excel_Import_Template.csv");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+
+      showToast("Spreadsheet CSV template downloaded!");
+    }
+
+    function parseImportedCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const text = e.target.result;
+          const lines = text.split(/\r?\n/);
+          if (lines.length < 2) {
+            showToast("Invalid CSV: Empty file or no headers.", "error");
+            return;
+          }
+
+          const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+          const colFileNum = headers.findIndex(h => h.includes('file number') || h.includes('number'));
+          const colDeptRef = headers.findIndex(h => h.includes('dept') || h.includes('ref') || h.includes('department'));
+          const colSubject = headers.findIndex(h => h.includes('subject') || h.includes('matter'));
+          const colAllocDate = headers.findIndex(h => h.includes('alloc') || h.includes('date'));
+          const colStage = headers.findIndex(h => h.includes('stage') || h.includes('situation'));
+          const colCustody = headers.findIndex(h => h.includes('custody') || h.includes('holding'));
+          const colComments = headers.findIndex(h => h.includes('comment') || h.includes('note'));
+
+          let successCount = 0;
+          let skippedDuplicates = 0;
+          const updatedList = [...files];
+
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const cleanValues = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+            const fileNum = colFileNum !== -1 ? cleanValues[colFileNum] : '';
+            const deptRef = colDeptRef !== -1 ? cleanValues[colDeptRef] : '';
+            const subject = colSubject !== -1 ? cleanValues[colSubject] : '';
+
+            if (!fileNum || !deptRef || !subject) continue;
+
+            const duplicateNum = updatedList.find(f => f.fileNumber.toLowerCase() === fileNum.toLowerCase());
+            const duplicateRef = updatedList.find(f => f.deptRef.toLowerCase() === deptRef.toLowerCase());
+            
+            if (duplicateNum || duplicateRef) {
+              skippedDuplicates++;
+              continue;
+            }
+
+            const allocatedDate = colAllocDate !== -1 ? cleanValues[colAllocDate] : new Date().toISOString().split('T')[0];
+            const presentStage = colStage !== -1 ? cleanValues[colStage] : 'Registered';
+            const custodyRaw = colCustody !== -1 ? cleanValues[colCustody].toLowerCase() : 'mine';
+            const custody = (custodyRaw.includes('department') || custodyRaw.includes('dept')) ? 'department' : 'mine';
+            const comments = colComments !== -1 ? cleanValues[colComments] : '';
+
+            updatedList.push({
+              id: `file-${generateUUID()}`,
+              fileNumber: fileNum,
+              deptRef: deptRef,
+              subject: subject,
+              allocatedDate: allocatedDate,
+              presentStage: presentStage,
+              custody: custody,
+              comments: comments,
+              history: [{
+                id: `hist-${generateUUID()}`,
+                type: 'received',
+                date: allocatedDate,
+                comment: 'Bulk imported via spreadsheet CSV upload.'
+              }],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
+            successCount++;
+          }
+
+          if (successCount > 0) {
+            files = updatedList;
+            localStorage.setItem('docusync_files', JSON.stringify(files));
+            showToast(`Imported ${successCount} files successfully!${skippedDuplicates > 0 ? ` (${skippedDuplicates} duplicates skipped)` : ''}`);
+            switchTab('dashboard');
+          } else {
+            showToast("No files imported. Verified for duplicated codes.", "error");
+          }
+
+        } catch (err) {
+          showToast("Failed to parse the template file.", "error");
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    // HELPERS: HTML Sanitizer
+    function escapeHtml(t) { return t ? String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : ''; }
+  </script>
+</body>
+</html>
+
