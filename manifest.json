@@ -1,0 +1,34 @@
+{
+  "name": "File Management System",
+  "short_name": "Files",
+  "description": "A professional file management and tracking system for document custody and workflow management.",
+  "start_url": "/files/",
+  "scope": "/files/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1e293b",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%234f46e5' width='192' height='192'/><path fill='white' d='M60 50h72a2 2 0 012 2v88a2 2 0 01-2 2H60a2 2 0 01-2-2V52a2 2 0 012-2zm6 8v72h60V58H66z'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%234f46e5' width='512' height='512'/><path fill='white' d='M160 140h192a8 8 0 018 8v216a8 8 0 01-8 8H160a8 8 0 01-8-8V148a8 8 0 018-8zm16 24v176h160V164H176z'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f1f5f9' width='540' height='720'/></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}
