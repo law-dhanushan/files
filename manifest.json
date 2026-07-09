@@ -8,27 +8,42 @@
   "orientation": "portrait-primary",
   "theme_color": "#1e293b",
   "background_color": "#ffffff",
+  "categories": ["productivity", "business"],
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%234f46e5' width='192' height='192'/><path fill='white' d='M60 50h72a2 2 0 012 2v88a2 2 0 01-2 2H60a2 2 0 01-2-2V52a2 2 0 012-2zm6 8v72h60V58H66z'/></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%234f46e5' width='192' height='192'/><path fill='white' d='M60 50h72a2 2 0 012 2v88a2 2 0 01-2 2H60a2 2 0 01-2-2V52a2 2 0 012-2zm0 96h72v-2H60v2z'/></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%234f46e5' width='512' height='512'/><path fill='white' d='M160 140h192a8 8 0 018 8v216a8 8 0 01-8 8H160a8 8 0 01-8-8V148a8 8 0 018-8zm16 24v176h160V164H176z'/></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%234f46e5' width='512' height='512'/><path fill='white' d='M160 140h192a8 8 0 018 8v216a8 8 0 01-8 8H160a8 8 0 01-8-8V148a8 8 0 018-8zm0 224h192v-8H160v8z'/></svg>",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     }
   ],
-  "categories": ["productivity", "business"],
   "screenshots": [
     {
       "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f1f5f9' width='540' height='720'/></svg>",
       "sizes": "540x720",
       "type": "image/svg+xml",
       "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Register New File",
+      "short_name": "New File",
+      "description": "Quickly register a new file in the system",
+      "url": "/files/?action=register",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%234f46e5' width='96' height='96'/><path fill='white' d='M48 20v56M20 48h56'/></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ]
 }

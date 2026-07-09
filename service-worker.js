@@ -1,19 +1,22 @@
-// Service Worker for PWA - Enables offline functionality and caching
-const CACHE_NAME = 'files-app-v1';
+// Service Worker for PWA offline support and caching
+const CACHE_NAME = 'file-management-v1';
 const urlsToCache = [
   '/files/',
   '/files/index.html',
   '/files/manifest.json',
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap',
-  'https://cdn.tailwindcss.com'
+  'https://cdn.tailwindcss.com',
+  'https://accounts.google.com/gsi/client',
+  'https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js'
 ];
 
-// Install event - cache essential files
+// Install event - cache resources
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(urlsToCache).catch(err => {
-        console.log('Cache install error:', err);
+        console.log('Cache addAll error:', err);
+        return Promise.resolve();
       });
     })
   );
@@ -38,68 +41,58 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') {
-    return;
-  }
-
-  // Handle Google/Microsoft auth APIs - always use network
-  if (event.request.url.includes('googleapis.com') || 
-      event.request.url.includes('graph.microsoft.com') ||
-      event.request.url.includes('accounts.google.com') ||
-      event.request.url.includes('login.microsoftonline.com')) {
-    event.respondWith(fetch(event.request));
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then(response => {
-      // Return cached version if available
       if (response) {
         return response;
       }
-      
-      // Try network request
+
       return fetch(event.request).then(response => {
-        // Only cache successful responses
-        if (!response || response.status !== 200) {
+        if (!response || response.status !== 200 || response.type === 'error') {
           return response;
         }
 
-        // Clone the response
         const responseToCache = response.clone();
-        
-        // Cache GET requests to certain URLs
-        if (event.request.method === 'GET' && 
-            (event.request.url.includes('/files/') || 
-             event.request.url.includes('cdn.tailwindcss') ||
-             event.request.url.includes('fonts.googleapis'))) {
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-        }
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
 
         return response;
-      }).catch(() => {
-        // Offline fallback
-        if (event.request.destination === 'document') {
-          return caches.match('/files/index.html');
-        }
-        return new Response('Offline - Resource not available', {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: new Headers({
-            'Content-Type': 'text/plain'
-          })
+      }).catch(error => {
+        console.log('Fetch error:', error);
+        return caches.match(event.request).then(cachedResponse => {
+          return cachedResponse || new Response('Offline - Please try again when connection is restored', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({ 'Content-Type': 'text/plain' })
+          });
         });
       });
     })
   );
 });
 
-// Handle messages from clients
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+// Handle background sync for data updates
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-data') {
+    event.waitUntil(syncDataWithCloud());
   }
 });
+
+async function syncDataWithCloud() {
+  try {
+    const client = await clients.matchAll();
+    if (client.length > 0) {
+      client[0].postMessage({
+        type: 'SYNC_DATA',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.log('Sync error:', error);
+  }
+}
